@@ -3,7 +3,9 @@ all:
 
 install:
 	cp dynu-update /usr/bin/dynu-update
+	chmod 755 /usr/bin/dynu-update
 	cp dynu-update-daemon /usr/bin/dynu-update-daemon
+	chmod 755 /usr/bin/dynu-update-daemon
 
 uninstall:
 	killall dynu-update-daemon
