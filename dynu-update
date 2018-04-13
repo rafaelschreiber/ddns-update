@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+import os
+import json
+import sys
+
+
+def init():
+    if os.getenv("USER") != "root":
+        print("Sorry this tool is just for administrators you have to run it as root")
+        exit(1)
+    if os.system("ping apt.dynu.com -c 1 > /dev/null") != 0:
+        print("Please check your Internet connection!")
+        exit(1)
+    if os.system("which curl > /dev/null") != 0:
+        print("curl isn't installed please install it and restart the program")
+        exit(1)
+    if os.system("which getip > /dev/null") != 0:
+        print("getip isn't installed please install it and restart the program")
+        print("You can install it from https://github.com/rafaelschreiber/getip")
+        exit(1)
+    if not os.path.exists("/etc/dynu-update/config.json"):
+        try:
+            os.mkdir("/etc/dynu-update")
+        except FileExistsError:
+            pass
+        os.system("curl https://raw.githubusercontent.com/rafaelschreiber/dynu-update/master/config.json "
+                  "--output /etc/dynu-update/config.json > /dev/null 2>&1")
+        print("Please insert data in /etc/dynu-update/config.json")
+        exit(1)
+    return True
+
+
+def getConfig():
+    with open('/etc/dynu-update/config.json') as configFile:
+        try:
+            config = json.load(configFile)
+        except json.decoder.JSONDecodeError:
+            print("Syntax Error in config file")
+            exit(1)
+        configFile.close()
+    crash = False
+    if config["username"] is None:
+        print("Please add a username in /etc/dynu-update/config.json")
+        crash = True
+    if config["password"] is None:
+        print("Please add a password in /etc/dynu-update/config.json")
+        crash = True
+    if config["domain"] is None:
+        print("Please add a domain in /etc/dynu-update/config.json")
+        crash = True
+    if crash:
+        exit(1)
+    return config
+
+
+def getip():
+    return os.popen('curl ipinfo.io/ip 2>/dev/null').readlines()[0][:-1]
+
+
+def updateDNS(information):
+    url = "https://api.dynu.com/nic/update" + \
+          "?hostname=" + information["domain"] + \
+          "&myip=" + information["ip"] + \
+          "&username=" + information["username"] + \
+          "&password=" + information["password"]
+    command = "curl \"" + url + "\" > /dev/null 2>&1"
+    os.system(command)
+
+
+def daemon(time):
+    if os.system("which dynu-update-daemon > /dev/null") != 0:
+        print("Please install the dynu-update-daemon")
+        exit(1)
+    os.system("dynu-update-daemon " + str(time))
+
+
+def main():
+    for arg in range(0, 3):
+        try:
+            sys.argv[arg] = sys.argv[arg]
+        except IndexError:
+            sys.argv.insert(arg, None)
+    if sys.argv[1] == "-h" or sys.argv[1] == "--help":
+        print("There is no help :(")
+        exit(0)
+    init()
+    if sys.argv[1] == "-d" or sys.argv[1] == "--daemon":
+        if sys.argv[2] is None or int(sys.argv[2]) < 30:
+            print("Please type in the wished update interval (in seconds)")
+            while True:
+                try:
+                    time = int(input(">>> "))
+                    if time < 30:
+                        print("Please type in a number greater or equal than 30\n")
+                    else:
+                        sys.argv[2] = time
+                        break
+                except ValueError:
+                    print("Please type in a decimal number\n")
+        daemon(sys.argv[2])
+        exit(0)
+    config = getConfig()
+    config["ip"] = getip()
+    updateDNS(config)
+
+
+if __name__ == '__main__':
+    try:
+        main()
+        exit(0)
+    except KeyboardInterrupt:
+        exit(1)
+    except EOFError:
+        exit(1)
