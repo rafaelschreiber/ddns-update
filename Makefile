@@ -8,6 +8,6 @@ install:
 	chmod 755 /usr/bin/dynu-update-daemon
 
 uninstall:
+	killall dynu-update-daemon
 	rm /usr/bin/dynu-update
 	rm /usr/bin/dynu-update-daemon
-	killall dynu-update-daemon
