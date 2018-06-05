@@ -2,6 +2,11 @@
 import os
 import json
 import sys
+import socket
+
+
+def createConfig():
+    pass
 
 
 def init():
@@ -14,10 +19,6 @@ def init():
     if os.system("which curl > /dev/null") != 0:
         print("curl isn't installed please install it and restart the program")
         exit(1)
-    if os.system("which getip > /dev/null") != 0:
-        print("getip isn't installed please install it and restart the program")
-        print("You can install it from https://github.com/rafaelschreiber/getip")
-        exit(1)
     if not os.path.exists("/etc/dynu-update/config.json"):
         try:
             os.mkdir("/etc/dynu-update")
@@ -25,12 +26,29 @@ def init():
             pass
         os.system("curl https://raw.githubusercontent.com/rafaelschreiber/dynu-update/master/config.json "
                   "--output /etc/dynu-update/config.json > /dev/null 2>&1")
-        print("Please insert data in /etc/dynu-update/config.json")
-        exit(1)
+        print("It seems you are running this program for the first time")
+        os.system(os.path.abspath(os.path.dirname(sys.argv[0])) + "/dynu-update")
+        exit(0)
     return True
 
 
+def getLastIP():
+    try:
+        with open('/etc/dynu-update/lastIP.txt') as lastIPFile:
+            lastIP = lastIPFile.readline()
+            try:
+                socket.inet_aton(lastIP)
+                lastIPFile.close()
+                return lastIP[:-1]
+            except socket.error:
+                lastIPFile.close()
+                return "0.0.0.0"
+    except FileNotFoundError:
+        return "0.0.0.0"
+
+
 def getConfig():
+    config = {"username": None, "password": None, "domain": None}
     with open('/etc/dynu-update/config.json') as configFile:
         try:
             config = json.load(configFile)
@@ -39,17 +57,25 @@ def getConfig():
             exit(1)
         configFile.close()
     crash = False
-    if config["username"] is None:
-        print("Please add a username in /etc/dynu-update/config.json")
+    if type(config["username"]) is not str:
+        print("\nYou have no username specified. Please type in your username:")
+        username = str(input(">>> "))
+        config["username"] = username
         crash = True
-    if config["password"] is None:
-        print("Please add a password in /etc/dynu-update/config.json")
+    if type(config["password"]) is not str:
+        print("\nYou have no password specified. Please type in your password:")
+        password = str(input(">>> "))
+        config["password"] = password
         crash = True
-    if config["domain"] is None:
-        print("Please add a domain in /etc/dynu-update/config.json")
+    if type(config["domain"]) is not str:
+        print("\nYou have no domain specified. Please type in your domain:")
+        domain = str(input(">>> "))
+        config["domain"] = domain
         crash = True
     if crash:
-        exit(1)
+        with open('/etc/dynu-update/config.json', 'w') as configFile:
+            json.dump(config, configFile)
+            configFile.close()
     return config
 
 
@@ -65,6 +91,7 @@ def updateDNS(information):
           "&password=" + information["password"]
     command = "curl \"" + url + "\" > /dev/null 2>&1"
     os.system(command)
+    os.system("echo " + information["ip"] + " > /etc/dynu-update/lastIP.txt")
 
 
 def daemon(time):
@@ -84,6 +111,9 @@ def main():
         print("There is no help :(")
         exit(0)
     init()
+    if getLastIP() == getip():
+        print("IP-Address didn't changed. Nothing to do here")
+        exit(0)
     if sys.argv[1] == "-d" or sys.argv[1] == "--daemon":
         if sys.argv[2] is None or int(sys.argv[2]) < 30:
             print("Please type in the wished update interval (in seconds)")
