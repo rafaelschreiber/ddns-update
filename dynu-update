@@ -13,7 +13,7 @@ def init():
     if os.getenv("USER") != "root":
         print("Sorry this tool is just for administrators you have to run it as root")
         exit(1)
-    if os.system("ping apt.dynu.com -c 1 > /dev/null") != 0:
+    if os.system("ping api.dynu.com -c 1 > /dev/null") != 0:
         print("Please check your Internet connection!")
         exit(1)
     if os.system("which curl > /dev/null") != 0:
