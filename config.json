@@ -1,5 +1,9 @@
 {
-  "host" : null,
-  "domain" : null,
-  "token" : null
+    "entries": [
+        {
+            "host": null,
+            "domain": null,
+            "token": null
+        }
+    ]
 }

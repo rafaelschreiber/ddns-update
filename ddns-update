@@ -9,9 +9,6 @@ def init():
     if os.getenv("USER") != "root":
         print("Sorry this tool is just for administrators you have to run it as root")
         exit(1)
-    if os.system("ping api.dynu.com -c 1 > /dev/null") != 0:
-        print("Please check your Internet connection!")
-        exit(1)
     if os.system("which curl > /dev/null") != 0:
         print("curl isn't installed please install it and restart the program")
         exit(1)
@@ -43,36 +40,20 @@ def getLastIP():
         return "0.0.0.0"
 
 
-def getConfig():
-    config = {"host": None, "domain": None, "token": None}
-    with open('/etc/ddns-update/config.json') as configFile:
-        try:
-            config = json.load(configFile)
-        except json.decoder.JSONDecodeError:
-            print("Syntax Error in config file")
-            exit(1)
-        configFile.close()
-    crash = False
-    if type(config["host"]) is not str:
+def checkConfig(confDict):
+    if type(confDict["host"]) is not str:
         print("\nYou have no host specified. Please type in the host:")
         host= str(input(">>> "))
-        config["host"] = host
-        crash = True
-    if type(config["domain"]) is not str:
+        confDict["host"] = host
+    if type(confDict["domain"]) is not str:
         print("\nYou have no domain specified. Please type in your domain:")
         domain = str(input(">>> "))
-        config["domain"] = domain
-        crash = True
-    if type(config["token"]) is not str:
+        confDict["domain"] = domain
+    if type(confDict["token"]) is not str:
         print("\nYou have no API Token specified. Please type in your API Token:")
         domain = str(input(">>> "))
-        config["domain"] = domain
-        crash = True
-    if crash:
-        with open('/etc/ddns-update/config.json', 'w') as configFile:
-            json.dump(config, configFile)
-            configFile.close()
-    return config
+        confDict["domain"] = domain
+    return confDict
 
 
 def getip():
@@ -86,7 +67,13 @@ def updateDNS(information):
           "&password=" + information["token"] + \
           "&ip=" + information["ip"]
     command = "curl \"" + url + "\" > /dev/null 2>&1"
-    os.system(command)
+    if os.system(command) == 0:
+        if information["host"] == "@":
+            print("Successfully updated " + information["domain"] + " with IP address " + information["ip"])
+        else:
+            print("Successfully updated " + information["host"] + "." + information["domain"] + " with IP address " + information["ip"])
+    else:
+        print("Error. Maybe your credentials are wrong")
     os.system("echo " + information["ip"] + " > /etc/ddns-update/lastIP.txt")
 
 
@@ -125,9 +112,19 @@ def main():
                     print("Please type in a decimal number\n")
         daemon(sys.argv[2])
         exit(0)
-    config = getConfig()
-    config["ip"] = getip()
-    updateDNS(config)
+
+    configData = None
+    with open('/etc/ddns-update/config.json') as configFile:
+        try:
+            configData = json.load(configFile)
+        except json.decoder.JSONDecodeError:
+            print("Syntax Error in config file")
+            exit(1)
+        configFile.close()
+    for configDict in configData["entries"]:
+        config = checkConfig(configDict)
+        config["ip"] = getip()
+        updateDNS(config)
 
 
 if __name__ == '__main__':
@@ -137,4 +134,7 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         exit(1)
     except EOFError:
+        exit(1)
+    except:
+        print("Crashed :(")
         exit(1)
