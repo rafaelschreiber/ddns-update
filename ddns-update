@@ -5,10 +5,6 @@ import sys
 import socket
 
 
-def createConfig():
-    pass
-
-
 def init():
     if os.getenv("USER") != "root":
         print("Sorry this tool is just for administrators you have to run it as root")
@@ -48,7 +44,7 @@ def getLastIP():
 
 
 def getConfig():
-    config = {"username": None, "password": None, "domain": None}
+    config = {"host": None, "domain": None, "token": None}
     with open('/etc/ddns-update/config.json') as configFile:
         try:
             config = json.load(configFile)
@@ -57,18 +53,18 @@ def getConfig():
             exit(1)
         configFile.close()
     crash = False
-    if type(config["username"]) is not str:
-        print("\nYou have no username specified. Please type in your username:")
-        username = str(input(">>> "))
-        config["username"] = username
-        crash = True
-    if type(config["password"]) is not str:
-        print("\nYou have no password specified. Please type in your password:")
-        password = str(input(">>> "))
-        config["password"] = password
+    if type(config["host"]) is not str:
+        print("\nYou have no host specified. Please type in the host:")
+        host= str(input(">>> "))
+        config["host"] = host
         crash = True
     if type(config["domain"]) is not str:
         print("\nYou have no domain specified. Please type in your domain:")
+        domain = str(input(">>> "))
+        config["domain"] = domain
+        crash = True
+    if type(config["token"]) is not str:
+        print("\nYou have no API Token specified. Please type in your API Token:")
         domain = str(input(">>> "))
         config["domain"] = domain
         crash = True
@@ -84,11 +80,11 @@ def getip():
 
 
 def updateDNS(information):
-    url = "https://api.dynu.com/nic/update" + \
-          "?hostname=" + information["domain"] + \
-          "&myip=" + information["ip"] + \
-          "&username=" + information["username"] + \
-          "&password=" + information["password"]
+    url = "https://dynamicdns.park-your-domain.com/update" + \
+          "?host=" + information["host"] + \
+          "&domain=" + information["domain"] + \
+          "&password=" + information["token"] + \
+          "&ip=" + information["ip"]
     command = "curl \"" + url + "\" > /dev/null 2>&1"
     os.system(command)
     os.system("echo " + information["ip"] + " > /etc/ddns-update/lastIP.txt")
