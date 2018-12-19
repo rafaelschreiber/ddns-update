@@ -94,9 +94,6 @@ def main():
         print("There is no help :(")
         exit(0)
     init()
-    if getLastIP() == getip():
-        print("IP-Address didn't changed. Nothing to do here")
-        exit(0)
     if sys.argv[1] == "-d" or sys.argv[1] == "--daemon":
         if sys.argv[2] is None or int(sys.argv[2]) < 30:
             print("Please type in the wished update interval (in seconds)")
@@ -111,6 +108,9 @@ def main():
                 except ValueError:
                     print("Please type in a decimal number\n")
         daemon(sys.argv[2])
+        exit(0)
+    if getLastIP() == getip():
+        print("IP-Address didn't changed. Nothing to do here")
         exit(0)
 
     configData = None
