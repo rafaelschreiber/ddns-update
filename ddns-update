@@ -135,6 +135,3 @@ if __name__ == '__main__':
         exit(1)
     except EOFError:
         exit(1)
-    except:
-        print("Crashed :(")
-        exit(1)
