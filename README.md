@@ -1,2 +1,2 @@
-# dynu-update
-Dynamic Update Client for Dynu
+# ddns-update
+Dynamic Update Client for DDNS
