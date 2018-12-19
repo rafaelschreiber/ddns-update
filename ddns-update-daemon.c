@@ -37,7 +37,7 @@ int main(int argc, char *argv[]){
 	close(STDERR_FILENO);
 
 	while (1) {
-		system("dynu-update");
+		system("ddns-update");
 		sleep(atoi(argv[1])); // refresh interval
 	}
 	exit(EXIT_SUCCESS);

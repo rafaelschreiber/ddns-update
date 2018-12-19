@@ -1,13 +1,13 @@
 all:
-	cc -o dynu-update-daemon dynu-update-daemon.c
+	cc -o ddns-update-daemon ddns-update-daemon.c
 
 install:
-	cp dynu-update /usr/bin/dynu-update
-	chmod 755 /usr/bin/dynu-update
-	cp dynu-update-daemon /usr/bin/dynu-update-daemon
-	chmod 755 /usr/bin/dynu-update-daemon
+	cp ddns-update /usr/bin/ddns-update
+	chmod 755 /usr/bin/ddns-update
+	cp ddns-update-daemon /usr/bin/ddns-update-daemon
+	chmod 755 /usr/bin/ddns-update-daemon
 
 uninstall:
-	killall dynu-update-daemon
-	rm /usr/bin/dynu-update
-	rm /usr/bin/dynu-update-daemon
+	killall ddns-update-daemon
+	rm /usr/bin/ddns-update
+	rm /usr/bin/ddns-update-daemon
